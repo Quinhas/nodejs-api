@@ -1,0 +1,27 @@
+{
+  "name": "nodejs-microsservices",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node --inspect=0.0.0.0:9229 --env-file=.env --watch src/index.ts",
+    "start": "node --env-file=.env src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "@quinhaas",
+  "license": "ISC",
+  "packageManager": "pnpm@10.18.0",
+  "engines": {
+    "node": ">=22.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "zod": "^4.1.11"
+  }
+}
