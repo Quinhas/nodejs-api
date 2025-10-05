@@ -8,7 +8,12 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node --inspect=0.0.0.0:9229 --env-file=.env --watch src/index.ts",
     "start": "node --env-file=.env src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src",
+    "ci:lint": "eslint src && prettier --check src"
   },
   "keywords": [],
   "author": "@quinhaas",
@@ -18,8 +23,16 @@
     "node": ">=22.20.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.37.0",
     "@types/node": "^24.6.2",
-    "typescript": "^5.9.3"
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "jiti": "^2.6.1",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.45.0"
   },
   "dependencies": {
     "zod": "^4.1.11"
