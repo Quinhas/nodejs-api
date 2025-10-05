@@ -1,4 +1,3 @@
-console.log('Hello, World!');
-console.log('This is a test.');
-console.log('Goodbye, World!');
-console.log('This is a test.');
+import { env } from './env.ts';
+
+console.log(`Application is running on ${env.NODE_ENV} mode.`);
