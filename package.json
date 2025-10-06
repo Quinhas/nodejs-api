@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
+    "prepare": "husky",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node --inspect=0.0.0.0:9229 --env-file=.env --watch-path=src --enable-source-maps src/index.ts",
     "start": "node --env-file=.env src/index.ts",
@@ -14,7 +15,10 @@
     "format": "prettier --write src",
     "format:check": "prettier --check src",
     "ci:lint": "eslint src && prettier --check src",
-    "prepare": "husky"
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio --host=0.0.0.0"
   },
   "keywords": [],
   "author": "@quinhaas",
@@ -28,7 +32,9 @@
     "@commitlint/config-conventional": "^20.0.0",
     "@eslint/js": "^9.37.0",
     "@types/node": "^24.6.2",
+    "@types/pg": "^8.15.5",
     "@types/validator": "^13.15.3",
+    "drizzle-kit": "^0.31.5",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
@@ -47,10 +53,12 @@
     "@fastify/helmet": "^13.0.2",
     "@fastify/rate-limit": "^10.3.0",
     "awilix": "^12.0.5",
+    "drizzle-orm": "^0.44.6",
     "fastify": "^5.6.1",
     "fastify-plugin": "^5.1.0",
     "fastify-type-provider-zod": "^6.0.0",
     "isomorphic-dompurify": "^2.28.0",
+    "pg": "^8.16.3",
     "pino-pretty": "^13.1.1",
     "validator": "^13.15.15",
     "zod": "^4.1.11"
