@@ -25,7 +25,7 @@ ENV NODE_ENV=production
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
 COPY package.json pnpm-lock.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile --ignore-scripts
 
 COPY --from=build /app/src ./src
 COPY --from=build /app/tsconfig.json ./

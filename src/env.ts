@@ -7,6 +7,7 @@ export type INodeEnv = z.infer<typeof nodeEnvSchema>;
 const envSchema = z.object({
   NODE_ENV: nodeEnvSchema.default('development'),
   TZ: z.string().default('America/Sao_Paulo'),
+  PORT: z.coerce.number().default(3333),
 
   DATABASE_USER: z.string(),
   DATABASE_PASSWORD: z.string(),

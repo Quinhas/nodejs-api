@@ -1,4 +1,4 @@
-# Node.js Microservices
+# Node.js API
 
 Simple Node.js + TypeScript application with Docker support.
 
@@ -24,7 +24,7 @@ docker-compose up
 
 3. Access the application:
 
-- App: http://localhost:3000
+- App: http://localhost:3333
 - Database: localhost:5432
 - Debug port: 9229
 
@@ -104,7 +104,7 @@ Build and run:
 
 ```bash
 docker build -t app --target prod .
-docker run -p 3000:3000 --env-file .env app
+docker run -p 3333:3333 --env-file .env app
 ```
 
 ## Stack
