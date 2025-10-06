@@ -1,11 +1,9 @@
-import fastifyAutoload from '@fastify/autoload';
 import fastify from 'fastify';
 import {
   serializerCompiler,
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
-import path from 'node:path';
 import { env } from '../env.ts';
 import { errorHandler } from './error-handler.ts';
 import { notFoundHandler } from './not-found-error-handler.ts';
@@ -61,17 +59,7 @@ app.setSerializerCompiler(serializerCompiler);
 app.setErrorHandler(errorHandler);
 app.setNotFoundHandler(notFoundHandler);
 
-await app.register(fastifyAutoload, {
-  dir: path.join(import.meta.dirname, 'plugins'),
-  dirNameRoutePrefix: false,
-  forceESM: true,
-});
-
-async function startHttpServer() {
-  const address = await app.listen({ port: env.PORT, host: '0.0.0.0' });
-  app.log.info(`HTTP server running on ${address}`);
-}
+export const logger = app.log;
 
 type IApp = typeof app;
-export { app, startHttpServer, type IApp };
-export const logger = app.log;
+export { app, type IApp };

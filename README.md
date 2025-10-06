@@ -26,7 +26,7 @@ docker-compose up
 
 - App: http://localhost:3333
 - Database: localhost:5432
-- Drizzle Studio: http://localhost:4983
+- Drizzle Studio: https://local.drizzle.studio/
 - Debug port: 9229
 
 ## Development
@@ -130,7 +130,7 @@ pnpm db:migrate
 pnpm db:studio
 ```
 
-Access Drizzle Studio at http://localhost:4983
+Access Drizzle Studio at https://local.drizzle.studio/
 
 ## Production
 

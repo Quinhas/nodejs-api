@@ -1,6 +1,7 @@
 import { closeDatabase, validateConnection } from './db/client.ts';
 import { env } from './env.ts';
-import { app, logger, startHttpServer } from './http/app.ts';
+import { app, logger } from './http/app.ts';
+import { bootstrap } from './http/bootstrap.ts';
 
 if (env.NODE_ENV === 'production') {
   async function gracefulShutdown() {
@@ -25,8 +26,9 @@ if (env.NODE_ENV === 'production') {
 
 try {
   await validateConnection();
-  await startHttpServer();
+  await bootstrap();
 } catch (error) {
   logger.error({ error }, 'Failed to start application');
+  await closeDatabase();
   process.exit(1);
 }
