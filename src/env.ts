@@ -25,6 +25,12 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().default(100),
   RATE_LIMIT_TIME_WINDOW: z.string().default('1 minute'),
   RATE_LIMIT_BAN: z.coerce.number().optional(),
+
+  SANITIZE_ENABLED: z
+    .union([z.literal('true'), z.literal('false'), z.boolean()])
+    .default('true')
+    .transform((val) => val === true || val === 'true')
+    .pipe(z.boolean()),
 });
 
 export type IEnv = z.infer<typeof envSchema>;
