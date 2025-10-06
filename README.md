@@ -26,6 +26,7 @@ docker-compose up
 
 - App: http://localhost:3333
 - Database: localhost:5432
+- Drizzle Studio: http://localhost:4983
 - Debug port: 9229
 
 ## Development
@@ -98,6 +99,39 @@ git commit -m "feat: add user authentication"
 git commit -m "fix(api): handle null response"
 ```
 
+#### Drizzle Commands
+
+**From your host machine** (requires containers running):
+
+```bash
+# Push schema changes to database
+pnpm docker:db:push
+
+# Generate migrations
+pnpm docker:db:generate
+
+# Run migrations
+pnpm docker:db:migrate
+
+# Open Drizzle Studio (database GUI)
+pnpm docker:db:studio
+```
+
+#### Alternative: Inside Container
+
+```bash
+# Access the container
+docker compose exec -it app sh
+
+# Then run commands directly
+pnpm db:push
+pnpm db:generate
+pnpm db:migrate
+pnpm db:studio
+```
+
+Access Drizzle Studio at http://localhost:4983
+
 ## Production
 
 Build and run:
@@ -109,9 +143,25 @@ docker run -p 3333:3333 --env-file .env app
 
 ## Stack
 
+### Core
 - Node.js 22.20.0
 - TypeScript 5.9
 - PostgreSQL 17
+- Fastify
+- Drizzle ORM
+
+### Security & Validation
+- Helmet (security headers)
+- CORS (cross-origin resource sharing)
+- Rate Limiting (DDoS protection)
+- Input Sanitization (XSS prevention)
+- Zod (schema validation)
+
+### Development Tools
 - Docker & Docker Compose
 - ESLint + Prettier
 - Husky + lint-staged + commitlint
+- Drizzle Studio (database GUI)
+
+### Dependency Injection
+- Awilix (IoC container)

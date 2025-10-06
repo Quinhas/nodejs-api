@@ -1,20 +1,20 @@
-import { closeDatabase } from './db/client.ts';
+import { closeDatabase, validateConnection } from './db/client.ts';
 import { env } from './env.ts';
-import { app, startHttpServer } from './http/app.ts';
+import { app, logger, startHttpServer } from './http/app.ts';
 
 if (env.NODE_ENV === 'production') {
   async function gracefulShutdown() {
     try {
-      app.log.info('Shutting down...');
+      logger.info('Shutting down...');
       await app.close();
 
-      app.log.info('Closing database connection...');
+      logger.info('Closing database connection...');
       await closeDatabase();
 
-      app.log.info('Graceful shutdown completed');
+      logger.info('Graceful shutdown completed');
       process.exit(0);
     } catch (error) {
-      app.log.error({ error }, 'Error during shutdown');
+      logger.error({ error }, 'Error during shutdown');
       process.exit(1);
     }
   }
@@ -23,4 +23,10 @@ if (env.NODE_ENV === 'production') {
   process.on('SIGINT', gracefulShutdown);
 }
 
-await startHttpServer();
+try {
+  await validateConnection();
+  await startHttpServer();
+} catch (error) {
+  logger.error({ error }, 'Failed to start application');
+  process.exit(1);
+}

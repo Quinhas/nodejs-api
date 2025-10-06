@@ -15,6 +15,7 @@ const app = fastify({
     env.NODE_ENV === 'development' ?
       {
         transport: {
+          level: 'debug',
           target: 'pino-pretty',
           options: {
             colorize: true,
@@ -73,3 +74,4 @@ async function startHttpServer() {
 
 type IApp = typeof app;
 export { app, startHttpServer, type IApp };
+export const logger = app.log;

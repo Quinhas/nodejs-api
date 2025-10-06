@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { env } from '../env.ts';
-import { app } from '../http/app.ts';
+import { logger } from '../http/app.ts';
 import { schema } from './schema/index.ts';
 
 const pool = new Pool({
@@ -12,10 +12,20 @@ const pool = new Pool({
 });
 
 pool.on('error', (err) => {
-  app.log.error({ err }, 'Unexpected error on idle client');
+  logger.error({ err }, 'Unexpected error on idle client');
 });
 
 export const db = drizzle(pool, { schema: schema, casing: 'snake_case' });
+
+export async function validateConnection() {
+  try {
+    await pool.query('SELECT 1');
+    logger.info('Database connection established');
+  } catch (error) {
+    logger.error({ error }, 'Failed to connect to database');
+    throw error;
+  }
+}
 
 export async function closeDatabase() {
   await pool.end();
