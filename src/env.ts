@@ -15,6 +15,18 @@ const envSchema = z.object({
   DATABASE_PORT: z.coerce.number().default(5432),
   DATABASE_NAME: z.string(),
   DATABASE_URL: z.url().startsWith('postgresql://'),
+
+  CORS_ORIGIN: z
+    .string()
+    .transform((val) => val.split(',').map((origin) => origin.trim()))
+    .pipe(z.array(z.url()))
+    .optional(),
+
+  RATE_LIMIT_MAX: z.coerce.number().default(100),
+  RATE_LIMIT_TIME_WINDOW: z.string().default('1 minute'),
+  RATE_LIMIT_BAN: z.coerce.number().optional(),
 });
+
+export type IEnv = z.infer<typeof envSchema>;
 
 export const env = envSchema.parse(process.env);
