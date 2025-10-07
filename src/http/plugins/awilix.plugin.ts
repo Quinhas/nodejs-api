@@ -47,7 +47,7 @@ export async function awilixPlugin(app: IApp) {
     {
       dependencies: Object.keys(app.diContainer.registrations),
     },
-    'Use cases registered in the DI container'
+    'Deps registered in the DI container'
   );
 }
 

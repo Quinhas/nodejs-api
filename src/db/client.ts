@@ -23,7 +23,18 @@ pool.on('error', (err) => {
   );
 });
 
-export const db = drizzle(pool, { schema: schema, casing: 'snake_case' });
+export const db = drizzle(pool, {
+  schema: schema,
+  casing: 'snake_case',
+  logger:
+    env.NODE_ENV === 'development' ?
+      {
+        logQuery(query, params) {
+          logger.info({ query, params });
+        },
+      }
+    : false,
+});
 
 type IDB = typeof db;
 export type { IDB };

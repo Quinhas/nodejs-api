@@ -1,21 +1,6 @@
 import { env } from '../../env.ts';
-
-export const ErrorCode = {
-  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
-  BAD_REQUEST: 'BAD_REQUEST',
-  UNAUTHORIZED: 'UNAUTHORIZED',
-  FORBIDDEN: 'FORBIDDEN',
-  NOT_FOUND: 'NOT_FOUND',
-  TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
-} as const;
-
-export type IErrorCodeKeys = (typeof ErrorCode)[keyof typeof ErrorCode];
-
-export interface IAppErrorDetails {
-  field?: string;
-  value?: unknown;
-  context?: Record<string, unknown>;
-}
+import { ErrorCode, type IErrorCodeKeys } from './error-codes.ts';
+import type { IAppErrorDetails, IAppErrorResponse } from './schemas.ts';
 
 export interface IAppErrorOptions {
   code: IErrorCodeKeys | string;
@@ -25,15 +10,10 @@ export interface IAppErrorOptions {
   previous?: Error;
 }
 
-export interface IAppErrorResponse {
-  statusCode: number;
-  code: IErrorCodeKeys | string;
-  message: string;
-  details?: IAppErrorDetails;
-  stack?: string;
-}
+const APP_ERROR_SYMBOL = Symbol.for('app.error');
 
 export class AppError extends Error {
+  private readonly [APP_ERROR_SYMBOL] = true;
   public readonly code: IErrorCodeKeys | string;
   public readonly statusCode: number;
   public readonly details?: IAppErrorDetails;
@@ -58,7 +38,6 @@ export class AppError extends Error {
 
   toJSON(): IAppErrorResponse {
     return {
-      statusCode: this.statusCode,
       code: this.code,
       message: this.message,
       details: this.details,
@@ -71,77 +50,112 @@ export class AppError extends Error {
     return this.previous ? this.previous.stack : this.stack;
   }
 
-  static badRequest(
-    props: { message?: string; details?: IAppErrorDetails } = {}
-  ): AppError {
-    const { message = 'Bad request', details } = props;
+  static badRequest({
+    code = ErrorCode.BAD_REQUEST,
+    message = 'Bad request',
+    statusCode = 400,
+    details,
+    previous,
+  }: Partial<IAppErrorOptions> = {}): AppError {
     return new AppError({
-      code: ErrorCode.BAD_REQUEST,
-      statusCode: 400,
+      code,
+      statusCode,
       message,
       details,
+      previous,
     });
   }
 
-  static unauthorized(
-    props: { message?: string; details?: IAppErrorDetails } = {}
-  ): AppError {
-    const { message = 'Unauthorized', details } = props;
+  static unauthorized({
+    code = ErrorCode.UNAUTHORIZED,
+    message = 'Unauthorized',
+    statusCode = 401,
+    details,
+    previous,
+  }: Partial<IAppErrorOptions> = {}): AppError {
     return new AppError({
-      code: ErrorCode.UNAUTHORIZED,
-      statusCode: 401,
+      code,
+      statusCode,
       message,
       details,
+      previous,
     });
   }
 
-  static forbidden(
-    props: { message?: string; details?: IAppErrorDetails } = {}
-  ): AppError {
-    const { message = 'Forbidden', details } = props;
+  static forbidden({
+    code = ErrorCode.FORBIDDEN,
+    message = 'Forbidden',
+    statusCode = 403,
+    details,
+    previous,
+  }: Partial<IAppErrorOptions> = {}): AppError {
     return new AppError({
-      code: ErrorCode.FORBIDDEN,
-      statusCode: 403,
+      code,
+      statusCode,
       message,
       details,
+      previous,
     });
   }
 
-  static notFound(
-    props: { message?: string; details?: IAppErrorDetails } = {}
-  ): AppError {
-    const { message = 'Not found', details } = props;
+  static notFound({
+    code = ErrorCode.NOT_FOUND,
+    message = 'Not found',
+    statusCode = 404,
+    details,
+    previous,
+  }: Partial<IAppErrorOptions> = {}): AppError {
     return new AppError({
-      code: ErrorCode.NOT_FOUND,
-      statusCode: 404,
+      code,
+      statusCode,
       message,
       details,
+      previous,
     });
   }
 
-  static tooManyRequests(
-    props: { message?: string; details?: IAppErrorDetails } = {}
-  ): AppError {
-    const { message = 'Too many requests', details } = props;
+  static tooManyRequests({
+    code = ErrorCode.TOO_MANY_REQUESTS,
+    message = 'Too many requests',
+    statusCode = 429,
+    details,
+    previous,
+  }: Partial<IAppErrorOptions> = {}): AppError {
     return new AppError({
-      code: ErrorCode.TOO_MANY_REQUESTS,
-      statusCode: 429,
+      code,
+      statusCode,
       message,
       details,
+      previous,
     });
   }
 
-  static internal(
-    props: {
-      message?: string;
-      previous?: Error;
-      details?: IAppErrorDetails;
-    } = {}
-  ): AppError {
-    const { message = 'Internal server error', previous, details } = props;
+  static conflict({
+    code = ErrorCode.CONFLICT,
+    message = 'Conflict',
+    statusCode = 409,
+    details,
+    previous,
+  }: Partial<IAppErrorOptions> = {}): AppError {
     return new AppError({
-      code: ErrorCode.INTERNAL_SERVER_ERROR,
-      statusCode: 500,
+      code,
+      statusCode,
+      message,
+      details,
+      previous,
+    });
+  }
+
+  static internal({
+    code = ErrorCode.INTERNAL_SERVER_ERROR,
+    message = 'Internal server error',
+    statusCode = 500,
+    details,
+    previous,
+  }: Partial<IAppErrorOptions> = {}): AppError {
+    return new AppError({
+      code,
+      statusCode,
       message,
       previous,
       details,
@@ -150,5 +164,8 @@ export class AppError extends Error {
 }
 
 export function isAppError(error: unknown): error is AppError {
-  return error instanceof AppError;
+  return (
+    error instanceof AppError ||
+    (typeof error === 'object' && error !== null && APP_ERROR_SYMBOL in error)
+  );
 }

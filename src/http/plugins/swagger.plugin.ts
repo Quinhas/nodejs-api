@@ -6,7 +6,7 @@ import { env } from '../../env.ts';
 import type { IApp } from '../app.ts';
 
 async function swaggerPlugin(app: IApp) {
-  if (env.NODE_ENV === 'production') {
+  if (env.NODE_ENV !== 'development') {
     return;
   }
 
@@ -48,7 +48,7 @@ async function swaggerPlugin(app: IApp) {
     },
   });
 
-  app.log.info(`Swagger UI available at http://localhost:${env.PORT}/docs`);
+  app.log.debug(`Swagger UI available at http://localhost:${env.PORT}/docs`);
 }
 
 export default fp(swaggerPlugin, {

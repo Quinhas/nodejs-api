@@ -101,6 +101,33 @@ git commit -m "feat: add user authentication"
 git commit -m "fix(api): handle null response"
 ```
 
+### Testing
+
+**From your host machine** (requires containers running):
+
+```bash
+# Run tests with coverage
+pnpm docker:test
+
+# Run tests in watch mode
+pnpm docker:test:watch
+```
+
+**Alternative: Inside Container**
+
+```bash
+# Access the container
+docker compose exec -it app sh
+
+# Run tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+```
+
+Tests use the `app_test` database (automatically created via `docker/setup.sql`).
+
 #### Drizzle Commands
 
 **From your host machine** (requires containers running):

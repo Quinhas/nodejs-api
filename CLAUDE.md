@@ -4,38 +4,50 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Common Commands
 
+### Docker (Makefile)
+```bash
+make help          # Show all available commands
+make up            # Start all services
+make down          # Stop all services
+make restart       # Restart all services
+make logs          # Show logs from all services
+make shell         # Open shell in app container
+make rebuild       # Rebuild and restart all services
+make clean         # Remove all containers, volumes, and images
+```
+
+### Testing
+```bash
+make test          # Run tests with coverage (Docker)
+make test-watch    # Run tests in watch mode (Docker)
+pnpm test          # Run tests (inside container)
+pnpm test:watch    # Run tests in watch mode (inside container)
+```
+
+### Database
+```bash
+make db-migrate    # Run migrations (Docker)
+make db-push       # Push schema changes (Docker)
+make db-generate   # Generate migrations (Docker)
+make db-studio     # Open Drizzle Studio at https://local.drizzle.studio/ (Docker)
+make db-seed       # Run database seed script (Docker)
+pnpm db:migrate    # Run migrations (inside container)
+pnpm db:push       # Push schema changes (inside container)
+pnpm db:generate   # Generate migrations (inside container)
+pnpm db:studio     # Open Drizzle Studio (inside container)
+pnpm db:seed       # Run database seed script (inside container)
+```
+
 ### Development
 ```bash
-pnpm dev              # Start dev server with hot-reload and debugger
-pnpm start            # Start production server
-pnpm typecheck        # Run TypeScript type checking
-pnpm lint             # Run ESLint
-pnpm lint:fix         # Fix ESLint issues
-pnpm format           # Format code with Prettier
-pnpm format:check     # Check formatting
-pnpm ci:lint          # Run both ESLint and Prettier checks (CI)
-```
-
-### Database (Docker)
-```bash
-pnpm docker:db:push      # Push schema changes to database
-pnpm docker:db:generate  # Generate migrations
-pnpm docker:db:migrate   # Run migrations
-pnpm docker:db:studio    # Open Drizzle Studio at https://local.drizzle.studio/
-```
-
-### Database (Local)
-```bash
-pnpm db:push      # Push schema changes
-pnpm db:generate  # Generate migrations
-pnpm db:migrate   # Run migrations
-pnpm db:studio    # Open Drizzle Studio
-```
-
-### Docker
-```bash
-docker compose up              # Start all services
-docker compose exec app sh     # Access app container
+pnpm dev           # Start dev server with hot-reload and debugger
+pnpm start         # Start production server
+pnpm typecheck     # Run TypeScript type checking
+pnpm lint          # Run ESLint
+pnpm lint:fix      # Fix ESLint issues
+pnpm format        # Format code with Prettier
+pnpm format:check  # Check formatting
+pnpm ci:lint       # Run both ESLint and Prettier checks (CI)
 ```
 
 ## Architecture Overview
@@ -197,6 +209,106 @@ Documentation is auto-generated from Zod schemas defined in route handlers.
 ## Debugging
 
 VS Code debug configuration available for attaching to the Docker container on port 9229.
+
+## Testing
+
+### Running Tests
+
+Tests run inside Docker container with access to the test database:
+
+```bash
+make test          # Run tests with coverage
+make test-watch    # Run tests in watch mode
+```
+
+### Test Structure
+
+Tests are **colocated** with the code they test:
+- Routes: `src/http/routes/**/*.test.ts`
+- Use cases: `src/core/modules/**/use-cases/*.test.ts`
+- Services: `src/core/modules/**/services/*.test.ts`
+
+### Testing Patterns
+
+#### 1. Route Testing
+
+Routes use **Supertest** to test HTTP endpoints:
+
+```typescript
+import request from 'supertest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { closeDatabase } from '../../../../db/client.ts';
+import { app } from '../../../app.ts';
+
+describe('Feature Route', () => {
+  beforeAll(async () => {
+    await app.ready(); // Initialize app without listening
+  });
+
+  afterAll(async () => {
+    await app.close();      // Close Fastify app
+    await closeDatabase();  // Close DB connections
+  });
+
+  test('should handle request', async () => {
+    const response = await request(app.server).get('/v1/endpoint');
+    expect(response.status).toEqual(200);
+  });
+});
+```
+
+**Key points**:
+- Use `app.ready()` instead of `app.listen()` in tests
+- Always close app and database in `afterAll` to prevent resource leaks
+- Use `describe` blocks to group related tests
+
+#### 2. Use Case Testing
+
+Use cases should be tested in isolation with mocked dependencies:
+
+```typescript
+import { describe, expect, test, vi } from 'vitest';
+import SomeUseCase from './some.use-case.ts';
+
+describe('SomeUseCase', () => {
+  test('should execute successfully', async () => {
+    const mockService = {
+      execute: vi.fn().mockResolvedValue('result'),
+    };
+
+    const useCase = new SomeUseCase({ service: mockService });
+    const result = await useCase.execute({ input: 'data' });
+
+    expect(result).toBeDefined();
+    expect(mockService.execute).toHaveBeenCalledWith('data');
+  });
+});
+```
+
+#### 3. Test Environment
+
+- **Environment**: Tests use `.env.test` (loaded via `test/setup.ts`)
+- **Database**: Connects to `app_test` database on Docker's `db` service
+- **Isolation**: Vitest runs in single-threaded mode to prevent DB connection conflicts
+- **Coverage**: Enabled by default with v8 provider
+
+### Test Lifecycle
+
+1. **Setup** (`test/setup.ts`): Loads `.env.test` before any imports
+2. **beforeAll**: Initialize app with `app.ready()`
+3. **Tests**: Execute test cases
+4. **afterAll**: Close app and database connections
+
+### Best Practices
+
+- ✅ Always close resources in `afterAll` hooks
+- ✅ Use `describe` blocks to group related tests
+- ✅ Test both success and error cases
+- ✅ Validate response structure, not just status codes
+- ✅ Mock external dependencies in use case tests
+- ❌ Don't use `app.listen()` in tests (use `app.ready()`)
+- ❌ Don't clear/truncate database (tests should handle existing data)
+- ❌ Don't create factories for the app (singleton pattern is maintained)
 
 ## TypeScript Configuration
 

@@ -1,26 +1,38 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
-import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
+import {
+  hasZodFastifySchemaValidationErrors,
+  isResponseSerializationError,
+} from 'fastify-type-provider-zod';
 import { env } from '../env.ts';
-import { AppError } from '../shared/errors/app-error.ts';
+import { AppError, isAppError } from '../shared/errors/app-error.ts';
 
 export async function errorHandler(
   error: FastifyError,
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  if (error instanceof AppError) {
+  if (isAppError(error)) {
     return reply.status(error.statusCode).send(error.toJSON());
   }
 
   if (hasZodFastifySchemaValidationErrors(error)) {
     const appError = AppError.badRequest({
       details: {
-        context: {
-          issues: error.validation.map((issue) => ({
-            message: issue.message,
-            field: issue.path,
-          })),
-        },
+        issues: error.validation.map((issue) => ({
+          message: issue.message,
+          field: issue.path,
+        })),
+      },
+    });
+
+    return reply.status(appError.statusCode).send(appError.toJSON());
+  }
+
+  if (isResponseSerializationError(error)) {
+    const appError = AppError.internal({
+      message: "Response doesn't match the schema",
+      details: {
+        issues: error.cause.issues,
       },
     });
 
@@ -56,10 +68,7 @@ export async function errorHandler(
 
   const appError = AppError.internal({
     previous: error,
-    details:
-      env.NODE_ENV !== 'production' ?
-        { context: { message: error.message, name: error.name } }
-      : undefined,
+    details: env.NODE_ENV !== 'production' ? { error } : undefined,
   });
 
   return reply.status(appError.statusCode).send(appError.toJSON());
