@@ -1,9 +1,10 @@
+import { formatISO } from 'date-fns';
 import { env } from '../../../../../env.ts';
 import type { IGetStatusService } from '../@types/health.ts';
 import type {
   IHealthCheckUseCase,
   IHealthCheckUseCaseOutput,
-} from './@types/health-check.use-case.js';
+} from './@types/health-check.use-case.d.ts';
 
 export default class HealthCheckUseCase implements IHealthCheckUseCase {
   private services: Record<string, IGetStatusService>;
@@ -40,7 +41,7 @@ export default class HealthCheckUseCase implements IHealthCheckUseCase {
       version: env.npm_package_version || '0.0.0',
       environment: env.NODE_ENV,
       timezone: env.TZ,
-      timestamp: new Date().toISOString(),
+      timestamp: formatISO(new Date()),
       uptime: process.uptime(),
       services: servicesStatus,
     };

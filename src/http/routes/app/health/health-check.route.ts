@@ -3,6 +3,8 @@ import type HealthCheckUseCase from '../../../../core/modules/app/health/use-cas
 import { nodeEnvSchema } from '../../../../env.ts';
 import type { IApp } from '../../../app.ts';
 
+const serviceStatusSchema = z.enum(['ok', 'error']);
+
 const healthCheckRouteResponseSchema = z.object({
   status: z.enum(['ok', 'degraded']),
   name: z.string(),
@@ -11,7 +13,7 @@ const healthCheckRouteResponseSchema = z.object({
   timezone: z.string(),
   timestamp: z.string(),
   uptime: z.number(),
-  services: z.record(z.string(), z.enum(['ok', 'error'])).optional(),
+  services: z.record(z.string(), serviceStatusSchema),
 });
 
 export async function healthCheckRoute(app: IApp) {

@@ -5,8 +5,9 @@ export const nodeEnvSchema = z.enum(['development', 'test', 'production']);
 export type INodeEnv = z.infer<typeof nodeEnvSchema>;
 
 const envSchema = z.object({
-  npm_package_name: z.string().optional(),
-  npm_package_version: z.string().optional(),
+  npm_package_name: z.string().optional().default('unknown'),
+  npm_package_version: z.string().optional().default('0.0.0'),
+  npm_package_description: z.string().optional().default('No description'),
 
   NODE_ENV: nodeEnvSchema.default('development'),
   TZ: z.string().default('America/Sao_Paulo'),

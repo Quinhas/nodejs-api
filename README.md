@@ -25,6 +25,8 @@ docker-compose up
 3. Access the application:
 
 - App: http://localhost:3333
+- API Docs: http://localhost:3333/docs (Scalar UI)
+- Health Check: http://localhost:3333/v1/health
 - Database: localhost:5432
 - Drizzle Studio: https://local.drizzle.studio/
 - Debug port: 9229
@@ -165,3 +167,18 @@ docker run -p 3333:3333 --env-file .env app
 
 ### Dependency Injection
 - Awilix (IoC container)
+
+## API Documentation
+
+Interactive API documentation is available at http://localhost:3333/docs (powered by Scalar).
+
+OpenAPI schema is auto-generated from Zod validation schemas defined in route handlers.
+
+## Architecture
+
+This project follows Clean Architecture principles with clear separation of concerns:
+
+- **Use Cases**: Business logic in `src/core/modules/`
+- **Routes**: HTTP layer in `src/http/routes/`
+- **Plugins**: Fastify plugins auto-loaded from `src/http/plugins/`
+- **Dependency Injection**: Awilix auto-loads use cases and manages dependencies

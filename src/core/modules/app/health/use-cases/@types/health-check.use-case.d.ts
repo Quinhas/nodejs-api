@@ -11,7 +11,7 @@ export interface IHealthCheckUseCaseOutput {
   timezone: string;
   timestamp: string;
   uptime: number;
-  services?: Record<string, IServiceStatus>;
+  services: Record<string, IServiceStatus>;
 }
 
 export type IHealthCheckUseCase = IUseCase<
