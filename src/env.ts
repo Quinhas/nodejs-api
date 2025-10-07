@@ -5,6 +5,9 @@ export const nodeEnvSchema = z.enum(['development', 'test', 'production']);
 export type INodeEnv = z.infer<typeof nodeEnvSchema>;
 
 const envSchema = z.object({
+  npm_package_name: z.string().optional(),
+  npm_package_version: z.string().optional(),
+
   NODE_ENV: nodeEnvSchema.default('development'),
   TZ: z.string().default('America/Sao_Paulo'),
   PORT: z.coerce.number().default(3333),

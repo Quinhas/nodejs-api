@@ -1,7 +1,9 @@
 import fastifyAutoload from '@fastify/autoload';
 import path from 'node:path';
 import { env } from '../env.ts';
-import { app, logger } from './app.ts';
+import { logger } from '../shared/logger.ts';
+import { app } from './app.ts';
+import { routes } from './routes/index.ts';
 
 export async function bootstrap() {
   await app.register(fastifyAutoload, {
@@ -9,6 +11,8 @@ export async function bootstrap() {
     dirNameRoutePrefix: false,
     forceESM: true,
   });
+
+  await app.register(routes);
 
   const address = await app.listen({
     port: env.PORT,

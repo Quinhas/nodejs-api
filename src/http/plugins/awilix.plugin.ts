@@ -1,7 +1,15 @@
 import { fastifyAwilixPlugin } from '@fastify/awilix';
-import { asValue } from 'awilix';
+import { asClass, asValue, Lifetime } from 'awilix';
 import fastifyPlugin from 'fastify-plugin';
-import type { IApp } from '../app.ts';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { GetDbStatusService } from '../../core/modules/app/health/services/get-db-status.service.ts';
+import { db } from '../../db/client.ts';
+import { logger } from '../../shared/logger.ts';
+import { type IApp } from '../app.ts';
+
+const _filename = fileURLToPath(import.meta.url);
+const _dirname = path.dirname(_filename);
 
 export async function awilixPlugin(app: IApp) {
   await app.register(fastifyAwilixPlugin, {
@@ -11,8 +19,36 @@ export async function awilixPlugin(app: IApp) {
   });
 
   app.diContainer.register({
-    logger: asValue(app.log),
+    logger: asValue(logger),
+    db: asValue(db),
+    getDbStatusService: asClass(GetDbStatusService).singleton(),
   });
+
+  const useCasesPath = path.join(
+    _dirname,
+    '..',
+    '..',
+    'core',
+    'modules',
+    '**',
+    'use-cases',
+    '*.use-case.ts'
+  );
+
+  app.diContainer.loadModules([useCasesPath], {
+    formatName: 'camelCase',
+    resolverOptions: {
+      register: asClass,
+      lifetime: Lifetime.SCOPED,
+    },
+  });
+
+  logger.debug(
+    {
+      dependencies: Object.keys(app.diContainer.registrations),
+    },
+    'Use cases registered in the DI container'
+  );
 }
 
 export default fastifyPlugin(awilixPlugin, {
