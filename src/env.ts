@@ -38,6 +38,8 @@ const envSchema = z.object({
 
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.email().optional(),
+
+  BETTER_AUTH_SECRET: z.string(),
 });
 
 export type IEnv = z.infer<typeof envSchema>;

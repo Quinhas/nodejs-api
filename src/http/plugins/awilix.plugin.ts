@@ -4,10 +4,9 @@ import fastifyPlugin from 'fastify-plugin';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db } from '../../database/client.ts';
+import { auth } from '../../lib/auth.ts';
 import { logger } from '../../shared/logger.ts';
-import { PasswordHashService } from '../../shared/services/argon-password-hash.service.ts';
 import { GetDbStatusService } from '../../shared/services/get-db-status.service.ts';
-import { ResendEmailService } from '../../shared/services/resend-email.service.ts';
 import { type IApp } from '../app.ts';
 
 const _filename = fileURLToPath(import.meta.url);
@@ -23,9 +22,8 @@ export async function awilixPlugin(app: IApp) {
   app.diContainer.register({
     logger: asValue(logger),
     db: asValue(db),
+    auth: asValue(auth),
     getDbStatusService: asClass(GetDbStatusService).singleton(),
-    emailService: asClass(ResendEmailService).singleton(),
-    passwordHashService: asClass(PasswordHashService).singleton(),
   });
 
   const useCasesPath = path.join(

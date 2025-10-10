@@ -84,6 +84,10 @@ async function swaggerPlugin(app: IApp) {
       persistAuth: true,
       showOperationId: true,
       searchHotKey: 'p',
+      sources: [
+        { url: '/auth/open-api/generate-schema', title: 'Auth' },
+        { url: '/docs/openapi.json', title: 'API' },
+      ],
     },
   });
 

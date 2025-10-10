@@ -6,14 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Docker (Makefile)
 ```bash
-make help          # Show all available commands
-make up            # Start all services
-make down          # Stop all services
-make restart       # Restart all services
-make logs          # Show logs from all services
-make shell         # Open shell in app container
-make rebuild       # Rebuild and restart all services
-make clean         # Remove all containers, volumes, and images
+make help             # Show all available commands
+make up               # Start all services in detached mode
+make up-attach        # Start all services in attached mode
+make down             # Stop all services
+make restart          # Restart all services
+make logs             # Show logs from all services
+make shell            # Open shell in app container
+make rebuild          # Rebuild and restart all services
+make clean            # Remove all containers, volumes, and images
+make fix-permissions  # Fix file permissions (run if you get EACCES errors)
 ```
 
 ### Testing
@@ -67,10 +69,14 @@ src/
 │   ├── routes/           # Route definitions
 │   ├── plugins/          # Fastify plugins (auto-loaded)
 │   └── error-handler.ts  # Global error handling
-├── db/                   # Database layer
+├── database/             # Database layer
 │   ├── schema/          # Drizzle schema definitions
 │   └── client.ts        # Database client & connection
-└── shared/              # Shared utilities & helpers
+├── lib/                 # External library configurations
+│   └── auth.ts          # Better Auth configuration
+└── shared/              # Shared utilities, services & templates
+    ├── services/        # Shared services (email, password, etc)
+    └── templates/       # Email templates
 ```
 
 ### Dependency Injection with Awilix
@@ -151,6 +157,118 @@ export async function healthCheckRoute(app: IApp) {
 }
 ```
 
+### Authentication with Better Auth
+
+The API uses **Better Auth** for authentication, configured in `src/lib/auth.ts`:
+
+**Architecture**:
+- **Better Auth**: Modern authentication library with built-in session management
+- **Drizzle Adapter**: Integrates Better Auth with the existing Drizzle ORM setup
+- **Password Hashing**: Custom Argon2 implementation via `PasswordHashService`
+- **ID Generation**: UUIDv7-based IDs for all auth-related tables (users, sessions, accounts)
+
+**Configuration**:
+```typescript
+// src/lib/auth.ts - Better Auth setup
+export const auth = betterAuth({
+  database: drizzleAdapter(db, { /* ... */ }),
+  emailAndPassword: {
+    enabled: true,
+    autoSignIn: false,
+    requireEmailVerification: true,
+  },
+  // Custom password hashing with Argon2
+  // Custom ID generation with UUIDv7
+});
+```
+
+**Database Schema**:
+- `users`: User accounts with email verification
+- `sessions`: Active user sessions
+- `accounts`: OAuth provider accounts (for future extension)
+- `verifications`: Email verification tokens
+
+**Integration with DI Container**:
+- `auth` instance registered as singleton in Awilix (`src/http/plugins/awilix.plugin.ts:26`)
+- `passwordHashService` registered as singleton for consistent hashing
+- Use cases can inject `auth` to perform authentication operations
+
+**Example Use Case**:
+```typescript
+export default class SignUpUseCase {
+  constructor({ auth }: { auth: Auth }) {
+    this.auth = auth;
+  }
+
+  async execute(input: ISignUpUseCaseInput) {
+    const result = await this.auth.api.signUpEmail({ /* ... */ });
+    // Handle Better Auth errors and convert to AppError
+  }
+}
+```
+
+**Error Handling**:
+- Better Auth throws `APIError` with specific error codes
+- Use cases catch `APIError` and convert to `AppError` for consistent error responses
+- Example: `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL` → `AppError.conflict()`
+
+**Email Integration**:
+- Email functionality handled by `AuthEmailService` in `src/shared/services/auth-email.service.ts`
+- Unified service with three methods:
+  - `sendVerificationEmail()`: Email verification link
+  - `sendResetPasswordEmail()`: Password reset link
+  - `sendPasswordResetConfirmation()`: Password change confirmation
+- Email templates in `src/shared/templates/` use modern, accessible HTML design:
+  - Minimalistic grayscale palette with subtle accent color
+  - Semantic HTML with ARIA roles for accessibility
+  - Mobile-responsive with proper spacing
+  - Date formatting via `date-fns` (respects `TZ` from `.env`)
+- Service registered as singleton in Awilix and injected into Better Auth callbacks
+
+### Shared Services Architecture
+
+The `src/shared/services/` directory contains cross-cutting services used across the application:
+
+**Service Pattern**:
+- Services are classes with clear interfaces and dependencies
+- Registered as **singleton** in Awilix for consistent behavior
+- Injectable into use cases and other services via constructor injection
+
+**Available Services**:
+
+1. **PasswordHashService** (`argon-password-hash.service.ts`):
+   - Handles password hashing using Argon2id algorithm
+   - Methods: `hash(password)`, `verify(password, hash)`
+   - Integrated with Better Auth for secure password storage
+
+2. **ResendEmailService** (`resend-email.service.ts`):
+   - Email delivery via Resend API
+   - Method: `send({ from, to, subject, html })`
+   - Returns email ID for tracking
+
+3. **AuthEmailService** (`auth-email.service.ts`):
+   - Unified service for all authentication-related emails
+   - Composes `ResendEmailService` for actual email delivery
+   - Uses templates from `src/shared/templates/`
+   - Methods:
+     - `sendVerificationEmail({ to, name, verificationUrl })`
+     - `sendResetPasswordEmail({ to, name, resetUrl })`
+     - `sendPasswordResetConfirmation({ to, name })`
+
+4. **GetDbStatusService** (`get-db-status.service.ts`):
+   - Database health check service
+   - Returns `'ok'` or `'error'` status
+   - Used by health check endpoint
+
+**Registration Example** (from `awilix.plugin.ts`):
+```typescript
+app.diContainer.register({
+  auth: asValue(auth),
+  getDbStatusService: asClass(GetDbStatusService).singleton(),
+  // Services are instantiated once and reused
+});
+```
+
 ### Type-Safe API with Zod
 
 The API uses `fastify-type-provider-zod` for:
@@ -164,28 +282,48 @@ All routes define Zod schemas that are used for both validation and documentatio
 
 Centralized error handling via `AppError` class:
 - Extends native `Error` with structured error codes and status codes
-- Provides factory methods: `badRequest()`, `unauthorized()`, `forbidden()`, `notFound()`, `tooManyRequests()`, `internal()`
+- Provides factory methods: `badRequest()`, `unauthorized()`, `forbidden()`, `notFound()`, `conflict()`, `tooManyRequests()`, `internal()`
 - Automatically serializes to JSON with appropriate HTTP status codes
 - Stack traces are only included in non-production environments
 
 Example:
 ```typescript
 throw AppError.notFound({ message: 'User not found', details: { userId: id } });
+throw AppError.conflict({ code: 'EMAIL_ALREADY_IN_USE', message: 'E-mail already in use.' });
 ```
 
 ### Database with Drizzle ORM
 
-- Schema defined in `src/db/schema/**`
+- Schema defined in `src/database/schema/**`
 - Uses PostgreSQL with connection pooling (`pg` library)
 - Column naming: **snake_case** (configured via `casing: 'snake_case'`)
-- Migrations stored in `src/db/migrations/` with timestamp prefix
+- Migrations stored in `src/database/migrations/` with timestamp prefix
 - Connection validation on startup with graceful shutdown handling
 
 ## Environment Variables
 
 All environment variables are validated via Zod schema in `src/env.ts`:
-- **Required**: `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_HOST`, `DATABASE_NAME`
-- **Optional**: `NODE_ENV` (default: development), `PORT` (default: 3333), `CORS_ORIGIN`, `RATE_LIMIT_*`, `SANITIZE_ENABLED`
+
+**Required**:
+- `DATABASE_URL`: PostgreSQL connection URL
+- `DATABASE_USER`: Database username
+- `DATABASE_PASSWORD`: Database password
+- `DATABASE_HOST`: Database host
+- `DATABASE_NAME`: Database name
+- `BETTER_AUTH_SECRET`: Secret key for Better Auth (used for session encryption)
+
+**Optional**:
+- `NODE_ENV`: Environment (development/test/production) - default: `development`
+- `TZ`: Timezone - default: `America/Sao_Paulo`
+- `PORT`: Server port - default: `3333`
+- `DATABASE_PORT`: Database port - default: `5432`
+- `CORS_ORIGIN`: Comma-separated list of allowed origins
+- `RATE_LIMIT_MAX`: Maximum requests per time window - default: `100`
+- `RATE_LIMIT_TIME_WINDOW`: Time window for rate limiting - default: `1 minute`
+- `RATE_LIMIT_BAN`: Ban duration in milliseconds (optional)
+- `SANITIZE_ENABLED`: Enable XSS sanitization - default: `true`
+- `RESEND_API_KEY`: Resend API key for sending emails (required for auth emails)
+- `EMAIL_FROM`: Email address for sending emails (required for auth emails)
 
 Copy `.env.example` to `.env` before starting development.
 
@@ -237,7 +375,7 @@ Routes use **Supertest** to test HTTP endpoints:
 ```typescript
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { closeDatabase } from '../../../../db/client.ts';
+import { closeDatabase } from '../../../../database/client.ts';
 import { app } from '../../../app.ts';
 
 describe('Feature Route', () => {
