@@ -1,12 +1,15 @@
-import type { ILogger } from '../../../../../@types/logger.ts';
-import { type IDB } from '../../../../../db/client.ts';
-import type { IGetStatusService, IServiceStatus } from '../@types/health.ts';
+import type { Logger } from 'pino';
+import type {
+  IGetServiceStatusService,
+  IServiceStatus,
+} from '../../core/types/services/get-service-status.service.ts';
+import type { IDB } from '../../database/client.ts';
 
-export class GetDbStatusService implements IGetStatusService {
+export class GetDbStatusService implements IGetServiceStatusService {
   private db: IDB;
-  private logger: ILogger;
+  private logger: Logger;
 
-  constructor(props: { db: IDB; logger: ILogger }) {
+  constructor(props: { db: IDB; logger: Logger }) {
     this.db = props.db;
     this.logger = props.logger;
   }

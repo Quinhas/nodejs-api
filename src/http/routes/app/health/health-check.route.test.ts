@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { closeDatabase } from '../../../../db/client.ts';
+import { closeDatabase } from '../../../../database/client.ts';
 import { app } from '../../../app.ts';
 
 describe('Health Check Route', () => {

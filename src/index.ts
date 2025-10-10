@@ -1,4 +1,4 @@
-import { closeDatabase, validateConnection } from './db/client.ts';
+import { closeDatabase, validateConnection } from './database/client.ts';
 import { env } from './env.ts';
 import { app } from './http/app.ts';
 import { logger } from './shared/logger.ts';

@@ -1,5 +1,5 @@
 export type IServiceStatus = 'ok' | 'error';
 
-export interface IGetStatusService {
+export interface IGetServiceStatusService {
   execute(): Promise<IServiceStatus>;
 }

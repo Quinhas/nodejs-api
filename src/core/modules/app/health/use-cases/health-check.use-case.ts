@@ -1,18 +1,35 @@
 import { formatISO } from 'date-fns';
-import { env } from '../../../../../env.ts';
-import type { IGetStatusService } from '../@types/health.ts';
+import { env, type INodeEnv } from '../../../../../env.ts';
 import type {
-  IHealthCheckUseCase,
-  IHealthCheckUseCaseOutput,
-} from './@types/health-check.use-case.d.ts';
+  IGetServiceStatusService,
+  IServiceStatus,
+} from '../../../../types/services/get-service-status.service.ts';
+import type { IUseCase } from '../../../../types/use-case.ts';
+
+export type IHealthCheckUseCaseInput = void;
+export interface IHealthCheckUseCaseOutput {
+  status: 'ok' | 'degraded';
+  name: string;
+  version: string;
+  environment: INodeEnv;
+  timezone: string;
+  timestamp: string;
+  uptime: number;
+  services: Record<string, IServiceStatus>;
+}
+
+export type IHealthCheckUseCase = IUseCase<
+  IHealthCheckUseCaseInput,
+  IHealthCheckUseCaseOutput
+>;
 
 export default class HealthCheckUseCase implements IHealthCheckUseCase {
-  private services: Record<string, IGetStatusService>;
+  private services: Record<string, IGetServiceStatusService>;
 
   constructor({
     getDbStatusService,
   }: {
-    getDbStatusService: IGetStatusService;
+    getDbStatusService: IGetServiceStatusService;
   }) {
     this.services = {
       db: getDbStatusService,
