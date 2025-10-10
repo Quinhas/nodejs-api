@@ -35,6 +35,9 @@ const envSchema = z.object({
     .default('true')
     .transform((val) => val === true || val === 'true')
     .pipe(z.boolean()),
+
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.email().optional(),
 });
 
 export type IEnv = z.infer<typeof envSchema>;
