@@ -1,14 +1,52 @@
 import fastifySwagger from '@fastify/swagger';
 import scalarFastifyApiReference from '@scalar/fastify-api-reference';
 import fp from 'fastify-plugin';
-import { jsonSchemaTransform } from 'fastify-type-provider-zod';
+import {
+  jsonSchemaTransform,
+  jsonSchemaTransformObject,
+} from 'fastify-type-provider-zod';
 import { env } from '../../env.ts';
 import type { IApp } from '../app.ts';
+import {
+  badRequestErrorSchema,
+  forbiddenErrorSchema,
+  internalServerErrorSchema,
+  unauthorizedErrorSchema,
+} from '../schemas/error-responses.schema.ts';
 
 async function swaggerPlugin(app: IApp) {
   if (env.NODE_ENV !== 'development') {
     return;
   }
+
+  app.addHook('onRoute', (routeOptions) => {
+    if (!routeOptions.schema?.response) {
+      return;
+    }
+
+    const config = routeOptions.config as { auth?: unknown } | undefined;
+    const hasAuth = config?.auth !== undefined;
+
+    const response = routeOptions.schema.response as Record<number, unknown>;
+
+    if (!response[400]) {
+      response[400] = badRequestErrorSchema;
+    }
+
+    if (!response[500]) {
+      response[500] = internalServerErrorSchema;
+    }
+
+    if (hasAuth) {
+      if (!response[401]) {
+        response[401] = unauthorizedErrorSchema;
+      }
+
+      if (!response[403]) {
+        response[403] = forbiddenErrorSchema;
+      }
+    }
+  });
 
   await app.register(fastifySwagger, {
     openapi: {
@@ -26,6 +64,7 @@ async function swaggerPlugin(app: IApp) {
       ],
     },
     transform: jsonSchemaTransform,
+    transformObject: jsonSchemaTransformObject,
   });
 
   await app.register(scalarFastifyApiReference, {

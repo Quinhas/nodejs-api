@@ -3,9 +3,10 @@ import { asClass, asValue, Lifetime } from 'awilix';
 import fastifyPlugin from 'fastify-plugin';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { GetDbStatusService } from '../../core/modules/app/health/services/get-db-status.service.ts';
-import { db } from '../../db/client.ts';
+import { db } from '../../database/client.ts';
 import { logger } from '../../shared/logger.ts';
+import { GetDbStatusService } from '../../shared/services/get-db-status.service.ts';
+import { ResendEmailService } from '../../shared/services/resend-email.service.ts';
 import { type IApp } from '../app.ts';
 
 const _filename = fileURLToPath(import.meta.url);
@@ -22,6 +23,7 @@ export async function awilixPlugin(app: IApp) {
     logger: asValue(logger),
     db: asValue(db),
     getDbStatusService: asClass(GetDbStatusService).singleton(),
+    emailService: asClass(ResendEmailService).singleton(),
   });
 
   const useCasesPath = path.join(

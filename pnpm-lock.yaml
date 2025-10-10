@@ -31,7 +31,7 @@ importers:
         version: 4.1.0
       drizzle-orm:
         specifier: ^0.44.6
-        version: 0.44.6(@types/pg@8.15.5)(pg@8.16.3)
+        version: 0.44.6(@types/pg@8.15.5)(kysely@0.28.7)(pg@8.16.3)
       fastify:
         specifier: ^5.6.1
         version: 5.6.1
@@ -50,6 +50,9 @@ importers:
       pino:
         specifier: ^10.0.0
         version: 10.0.0
+      resend:
+        specifier: ^6.1.2
+        version: 6.1.2
       uuidv7:
         specifier: ^1.0.2
         version: 1.0.2
@@ -1922,6 +1925,10 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
+  kysely@0.28.7:
+    resolution: {integrity: sha512-u/cAuTL4DRIiO2/g4vNGRgklEKNIj5Q3CG7RoUB5DV5SfEC2hMvPxKi0GWPmnzwL2ryIeud2VTcEEmqzTzEPNw==}
+    engines: {node: '>=20.0.0'}
+
   leven@4.1.0:
     resolution: {integrity: sha512-KZ9W9nWDT7rF7Dazg8xyLHGLrmpgq2nVNFUckhqdW3szVP6YhCpp/RAnpmVExA9JvrMynjwSLVrEj3AepHR6ew==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -2297,6 +2304,15 @@ packages:
   require-from-string@2.0.2:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
     engines: {node: '>=0.10.0'}
+
+  resend@6.1.2:
+    resolution: {integrity: sha512-C9Q+YkRe57P8MQlkHG3yatSR/B6sqBGA06Ri2DveJfkz9Vm16182FC/iHB0K6IAfmqZ4yRrFebFw1EPuktLtSg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@react-email/render': '*'
+    peerDependenciesMeta:
+      '@react-email/render':
+        optional: true
 
   resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
@@ -3875,9 +3891,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.6(@types/pg@8.15.5)(pg@8.16.3):
+  drizzle-orm@0.44.6(@types/pg@8.15.5)(kysely@0.28.7)(pg@8.16.3):
     optionalDependencies:
       '@types/pg': 8.15.5
+      kysely: 0.28.7
       pg: 8.16.3
 
   dunder-proto@1.0.1:
@@ -4467,6 +4484,9 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
+  kysely@0.28.7:
+    optional: true
+
   leven@4.1.0: {}
 
   levn@0.4.1:
@@ -4828,6 +4848,8 @@ snapshots:
   require-directory@2.1.1: {}
 
   require-from-string@2.0.2: {}
+
+  resend@6.1.2: {}
 
   resolve-from@4.0.0: {}
 
